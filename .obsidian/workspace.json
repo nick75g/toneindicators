@@ -148,6 +148,17 @@
   },
   "active": "0b61050d579c2b1f",
   "lastOpenFiles": [
+    "build/app/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt",
+    "build/app/intermediates/runtime_symbol_list/debug/R.txt",
+    "build/app/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar",
+    "build/app/intermediates/project_dex_archive/debug/out/893055de1af0e83c44a85dd59de19342e8bf8c4b156e7347c23ade2a24b12d5b_0.jar",
+    "build/app/intermediates/project_dex_archive/debug/out/893055de1af0e83c44a85dd59de19342e8bf8c4b156e7347c23ade2a24b12d5b_1.jar",
+    "build/app/intermediates/project_dex_archive/debug/out/893055de1af0e83c44a85dd59de19342e8bf8c4b156e7347c23ade2a24b12d5b_2.jar",
+    "build/app/intermediates/project_dex_archive/debug/out/893055de1af0e83c44a85dd59de19342e8bf8c4b156e7347c23ade2a24b12d5b_3.jar",
+    "build/app/intermediates/incremental/debug-mergeJavaRes/zip-cache/6ziVrtsbucYzhb19yI8jDsPLT7c=",
+    "build/app/intermediates/incremental/debug-mergeJavaRes/zip-cache/9psIhPPfp1BIS3dpUg64RQpJHbc=",
+    "build/app/intermediates/incremental/debug-mergeJavaRes/zip-cache/a3x6c46qkkodGkJnMK9F7ggb8gc=",
+    "build/app/intermediates/incremental/debug-mergeJavaRes/zip-cache/bEpxrY8V3oYMFKyfPJU6vhvjfAY=",
     "README.md",
     "README (2).md"
   ]
