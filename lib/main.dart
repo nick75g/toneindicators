@@ -9,7 +9,7 @@ var testData = {
   "/lh": ["lighthearted", "The previous statement was meant to be lighthearted."],
   "/gen": ["genuine", "The previous statement was genuine."],
   "/srs": ["serious", "The previous statement was to be taken seriously."]
-};
+}; //TODO: Replace with sqflite stuff
 
 void main() {
   runApp(MyApp());
@@ -36,6 +36,8 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   Map indicators = testData; //replace testData with {} for test
+  var selectedIndex = 0;
+  var currentTag = "";
 
   void addIndicator(tag, name, desc) {
     indicators[tag] = [name, desc];
@@ -47,6 +49,15 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void changeIndex(i) {
+    selectedIndex = i;
+    notifyListeners();
+  }
+
+  Widget fullScreen(tag) {
+    return FullScreen(tag: tag);
+  }
+
 }
 
 class MyHomePage extends StatefulWidget {
@@ -56,65 +67,153 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  var selectedIndex = 0;
-
   @override
   Widget build(BuildContext context) {
-
+    var appState = context.watch<MyAppState>();
+    var tag = appState.currentTag;
+    var index = appState.selectedIndex;
+    
     Widget page;
-    switch (selectedIndex) {
+    Icon icon;
+    switch (index) {
       case 0:
         page = GeneratorPage();
+        icon = Icon(Icons.edit);
       case 1:
-        page = Placeholder();
+        page = FullScreen(tag: tag);
+        icon = Icon(Icons.arrow_back);
+      case 2:
+        page = EditScreen(tag: tag);
+        icon = Icon(Icons.check);
       default:
-        throw UnimplementedError('no widget for $selectedIndex');
-
+        throw UnimplementedError('no widget for $index');
     }
+    
+    final theme = Theme.of(context);
+    final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
-          body: GeneratorPage(),
+          body: page,
+          appBar: AppBar( //TODO: Conditional AppBar when in FullScreen widget
+            leading: IconButton(onPressed: () {
+
+            }, icon: Icon(Icons.arrow_back)),
+            title: Text("Tone Indicators", style: titlestyle),
+          ),
+          floatingActionButton: FloatingActionButton(onPressed: () {
+            if (index == 1) {
+              appState.changeIndex(0); //TODO: Fully implement Button
+            }
+          },
+          child: icon,
+          ),
         );
       }
     );
   }
 }
 
-
 class GeneratorPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final ind = appState.indicators;
+
+    return Center(
+      child: ListView(
+        children: [
+          for (var i in ind.entries)
+            ToneCard(titleText: i.value[0], subText: i.value[1], toneTag: i.key)
+        ],
+      )
+    );
+  }
+}
+
+class ToneCard extends StatefulWidget {
+
+  final String titleText;
+  final String subText;
+  final String toneTag;
+
+  const ToneCard({required this.titleText, required this.subText, required this.toneTag});
+
+  @override
+  State<ToneCard> createState() => _ToneCardState();
+}
+
+class _ToneCardState extends State<ToneCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final leadstyle = theme.textTheme.headlineSmall!.copyWith(color: theme.colorScheme.onPrimary);
     final substyle = theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.onPrimary);
-    final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
     var appState = context.watch<MyAppState>();
-    var ind = appState.indicators;
+
+    return Padding(
+      padding: const EdgeInsets.all(5.0),
+      child: ListTile(
+        tileColor: theme.colorScheme.primary,
+        title: Text(widget.titleText, style: leadstyle),
+        subtitle: Text(widget.subText, style: substyle),
+        leading: TextButton(onPressed: () {setState(() {
+          appState.currentTag = widget.toneTag; appState.changeIndex(1);
+        });}, child: Text(widget.toneTag, style: leadstyle)),
+        trailing: IconButton(onPressed: () {appState.removeIndicator(widget.toneTag);}, icon: Icon(Icons.info, color: theme.colorScheme.onPrimary),),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0)
+        ),
+      ),
+    );
+  }
+}
+
+class EditScreen extends StatelessWidget {
+  final String tag;
+
+  const EditScreen({required this.tag});
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    return Placeholder(); //TODO: Implement EditScreen and NewTagScreen
+  }
+}
+
+class FullScreen extends StatelessWidget {
+  final String tag;
+
+  const FullScreen({required this.tag});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardColor = theme.colorScheme.primary;
+    final style = theme.textTheme.displayLarge!.copyWith(color: theme.colorScheme.onPrimary);
 
     return Center(
-      child: ListView(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Text("Indicators", style: titlestyle),
-          ),
-          for (var i in ind.entries)
-            Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: ListTile(
-                tileColor: theme.colorScheme.primary,
-                title: Text(i.value[0], style: leadstyle),
-                subtitle: Text(i.value[1], style: substyle),
-                leading: Text(i.key, style: leadstyle),
-                trailing: IconButton(onPressed: () {appState.removeIndicator(i.key);}, icon: Icon(Icons.delete, color: theme.colorScheme.onPrimary),),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0)
+      child: Container(
+        padding: const EdgeInsets.all(5.0),
+        width: MediaQuery.sizeOf(context).width,
+        height: MediaQuery.sizeOf(context).height,
+        child: Card(
+          color: cardColor,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: Text(tag,
+                  style: style,
                 ),
               ),
-            )
-        ],
+            ),
+          ),
+        ),
       )
     );
   }
