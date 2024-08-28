@@ -107,6 +107,28 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget ack = TextButton(onPressed: () {
       Navigator.of(context).pop();
     }, child: Text("Okay"));
+
+    SnackBar snackBarDeleted = SnackBar(content: Text("Indicator deleted."));
+
+    Widget yesDelete = TextButton(onPressed: () {
+      appState.removeIndicator(tag);
+      appState.changeIndex(0);
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(snackBarDeleted);
+    }, child: Text("Yes, Delete"));
+
+    AlertDialog alertDeleteTag = AlertDialog(
+      title: Text("Delete Indicator"),
+      content: Text("Are you sure you want to delete this indicator?"),
+      actions: [
+        cancel,
+        yesDelete
+      ],
+    );
+
+    Widget delete = IconButton(onPressed: () {
+      showDialog(context: context, builder: (BuildContext context) {return alertDeleteTag;});
+    }, icon: Icon(Icons.delete, color: theme.colorScheme.primary));
     
 
     AlertDialog alertEditExit = AlertDialog(
@@ -127,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ]
     );
 
-    AlertDialog alertDeleteTag = AlertDialog(
+    AlertDialog alertEmptyTagDelete = AlertDialog(
       title: Text("Delete Tag"),
       content: Text("You've left the 'Tone Indicator' box empty. If you continue, the tone indicator will be deleted. Are you sure?"),
       actions: [
@@ -190,11 +212,14 @@ class _MyHomePageState extends State<MyHomePage> {
               appState.changeIndex(0);
             }
           }, icon: Icon(Icons.arrow_back)),
-          title: Text("Edit Indicator", style: titlestyle)
+          title: Text("Edit Indicator", style: titlestyle),
+          actions: [
+            delete
+          ],
         );
         actionButton = FloatingActionButton(onPressed: () {
           if (appState.temptag == "") {
-            showDialog(context: context, builder: (BuildContext context){return alertDeleteTag;});
+            showDialog(context: context, builder: (BuildContext context){return alertEmptyTagDelete;});
           }
           else {
             appState.changeIndicator();
@@ -294,7 +319,7 @@ class _ToneCardState extends State<ToneCard> {
         });}, child: Text(widget.toneTag, style: leadstyle)),
         trailing: IconButton(onPressed: () {setState(() {
           appState.currentTag = widget.toneTag; appState.changeIndex(2);
-        });}, icon: Icon(Icons.info, color: theme.colorScheme.onPrimary),),
+        });}, icon: Icon(Icons.edit, color: theme.colorScheme.onPrimary),),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0)
         ),
