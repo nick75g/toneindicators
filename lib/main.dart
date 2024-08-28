@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -72,36 +74,56 @@ class _MyHomePageState extends State<MyHomePage> {
     var appState = context.watch<MyAppState>();
     var tag = appState.currentTag;
     var index = appState.selectedIndex;
+    final theme = Theme.of(context);
+    final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
+
+    Widget cancel = TextButton(onPressed: (){}, child: Text("Cancel"));
+    Widget closeEdit = TextButton(onPressed: (){
+      appState.changeIndex(0);
+    }, child: Text("Close"));
+    AlertDialog alertEditExit = AlertDialog(
+      title: Text("Exit Editing"),
+      content: Text("Are you sure you want to exit the edit screen? Unsaved data will be lost."),
+      actions: [
+        cancel,
+        closeEdit
+      ],
+    );
     
     Widget page;
+    PreferredSizeWidget appbar;
     Icon icon;
     switch (index) {
       case 0:
         page = GeneratorPage();
-        icon = Icon(Icons.edit);
+        icon = Icon(Icons.add);
+        appbar = AppBar(leading: IconButton(onPressed: () {
+            exit(0);
+          }, icon: Icon(Icons.close)),
+          title: Text("Tone Indicators", style: titlestyle),
+        );
       case 1:
         page = FullScreen(tag: tag);
         icon = Icon(Icons.arrow_back);
+        appbar = PreferredSize(preferredSize: Size(0.0, 0.0), child: Container());
       case 2:
         page = EditScreen(tag: tag);
         icon = Icon(Icons.check);
+        appbar = AppBar(leading: IconButton(onPressed: () {
+            showDialog(context: context, builder: (BuildContext context) {return alertEditExit;});
+          }, icon: Icon(Icons.arrow_back)),
+          title: Text("Edit Indicator", style: titlestyle)
+        );
+
       default:
         throw UnimplementedError('no widget for $index');
     }
     
-    final theme = Theme.of(context);
-    final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
           body: page,
-          appBar: AppBar( //TODO: Conditional AppBar when in FullScreen widget
-            leading: IconButton(onPressed: () {
-
-            }, icon: Icon(Icons.arrow_back)),
-            title: Text("Tone Indicators", style: titlestyle),
-          ),
+          appBar:  appbar,
           floatingActionButton: FloatingActionButton(onPressed: () {
             if (index == 1) {
               appState.changeIndex(0); //TODO: Fully implement Button
@@ -161,7 +183,9 @@ class _ToneCardState extends State<ToneCard> {
         leading: TextButton(onPressed: () {setState(() {
           appState.currentTag = widget.toneTag; appState.changeIndex(1);
         });}, child: Text(widget.toneTag, style: leadstyle)),
-        trailing: IconButton(onPressed: () {appState.removeIndicator(widget.toneTag);}, icon: Icon(Icons.info, color: theme.colorScheme.onPrimary),),
+        trailing: IconButton(onPressed: () {setState(() {
+          appState.currentTag = widget.toneTag; appState.changeIndex(2);
+        });}, icon: Icon(Icons.info, color: theme.colorScheme.onPrimary),),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0)
         ),
@@ -178,8 +202,44 @@ class EditScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var title = appState.indicators[tag][0];
+    var subtitle = appState.indicators[tag][1];
 
-    return Placeholder(); //TODO: Implement EditScreen and NewTagScreen
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          initialValue: tag,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Tone Indicator"
+          ),
+        ),
+        SizedBox(
+          height: 15.0,
+        ),
+        TextFormField(
+          initialValue: title,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Title"
+          ),
+        ),
+        SizedBox(
+          height: 15.0,
+        ),
+        TextFormField(
+          initialValue: subtitle,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Description"
+          ),
+        )
+      ],
+    ); //TODO: Implement EditScreen and NewTagScreen
   }
 }
 
