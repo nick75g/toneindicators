@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:async';
 
 var testData = {
   "/s": ["sarcasm", "The previous statement was meant to be sarcastic."],
@@ -10,7 +11,7 @@ var testData = {
   "/lh": ["lighthearted", "The previous statement was meant to be lighthearted."],
   "/gen": ["genuine", "The previous statement was genuine."],
   "/srs": ["serious", "The previous statement was to be taken seriously."]
-}; //TODO: Replace with sqflite stuff
+}; //TODO: Forget sqflite, replace with path_provider
 
 void main() {
   runApp(MyApp());
@@ -348,6 +349,7 @@ class EditScreen extends StatelessWidget {
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        SizedBox(height: 15.0),
         TextFormField(
           initialValue: tonaltag,
           decoration: InputDecoration(
@@ -438,6 +440,7 @@ class NewTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        SizedBox(height: 15.0),
         TextFormField(
           decoration: InputDecoration(
             border: OutlineInputBorder(),
