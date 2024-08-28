@@ -38,13 +38,13 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   Map indicators = testData; //replace testData with {} for test
   var selectedIndex = 0;
-  var currentTag = "";
-  var temptag = "";
-  var temptitle = "";
-  var tempsubtitle = "";
+  String currentTag = "";
+  String temptag = "";
+  String temptitle = "";
+  String tempsubtitle = "";
 
-  void addIndicator(tag, name, desc) {
-    indicators[tag] = [name, desc];
+  void addIndicator(String tag, String name, String desc) {
+    indicators[tag] = <String>[name, desc];
     notifyListeners();
   }
 
@@ -62,6 +62,10 @@ class MyAppState extends ChangeNotifier {
   void changeIndex(i) {
     selectedIndex = i;
     notifyListeners();
+  }
+
+  bool checkExist (tag) {
+    return indicators.containsKey(tag);
   }
 
   Widget fullScreen(tag) {
@@ -85,21 +89,14 @@ class _MyHomePageState extends State<MyHomePage> {
     final theme = Theme.of(context);
     final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
 
-    Widget cancel = TextButton(onPressed: (){Navigator.of(context).pop();}, child: Text("Cancel"));
-    Widget closeEdit = TextButton(onPressed: (){
+    Widget cancel = TextButton(onPressed: (){
+      Navigator.of(context).pop();
+    }, child: Text("Cancel"));
+
+    Widget exitScreen = TextButton(onPressed: (){
       appState.changeIndex(0);
       Navigator.of(context).pop();
-    }, child: Text("Close"));
-
-
-    AlertDialog alertEditExit = AlertDialog(
-      title: Text("Exit Editing"),
-      content: Text("Are you sure you want to exit the edit screen? Unsaved data will be lost."),
-      actions: [
-        cancel,
-        closeEdit
-      ],
-    );
+    }, child: Text("Exit"));
 
     Widget deleteEdit = TextButton(onPressed: (){
       appState.removeIndicator(tag);
@@ -107,6 +104,28 @@ class _MyHomePageState extends State<MyHomePage> {
       Navigator.of(context).pop();
     }, child: Text("Delete"));
 
+    Widget ack = TextButton(onPressed: () {
+      Navigator.of(context).pop();
+    }, child: Text("Okay"));
+    
+
+    AlertDialog alertEditExit = AlertDialog(
+      title: Text("Exit Editing"),
+      content: Text("Are you sure you want to exit the 'Edit Indicator' screen? Unsaved data will be lost."),
+      actions: [
+        cancel,
+        exitScreen
+      ]
+    );
+
+    AlertDialog alertNewExit = AlertDialog(
+      title: Text("Exit Creation"),
+      content: Text("Are you sure you want to exit the 'New Indicator' screen? Unsaved Data will be lost."),
+      actions: [
+        cancel,
+        exitScreen
+      ]
+    );
 
     AlertDialog alertDeleteTag = AlertDialog(
       title: Text("Delete Tag"),
@@ -114,10 +133,27 @@ class _MyHomePageState extends State<MyHomePage> {
       actions: [
         cancel,
         deleteEdit
+      ]
+    );
+
+    AlertDialog alertNewNonZeroTag = AlertDialog(
+      title: Text("Invalid Input"),
+      content: Text("You haven't specified an indicator. The 'Tone Indicator' field is mandatory."),
+      actions: [
+        ack
+      ]
+    );
+
+    AlertDialog alertNewExistingTag = AlertDialog(
+      title: Text("Indicator already exists"),
+      content: Text("You're trying to create an indicator which already exists. Please rewrite your indicator."),
+      actions: [
+        ack
       ],
     );
 
-    SnackBar snackBar = SnackBar(content: Text("Changes saved."));
+    SnackBar snackBarSaved = SnackBar(content: Text("Changes saved."));
+    SnackBar snackBarCreated = SnackBar(content: Text("Indicator created."));
     
     Widget page;
     PreferredSizeWidget appbar;
@@ -132,7 +168,9 @@ class _MyHomePageState extends State<MyHomePage> {
           }, icon: Icon(Icons.close)),
           title: Text("Tone Indicators", style: titlestyle),
         );
-        actionButton = FloatingActionButton(onPressed: () {}, child: icon);
+        actionButton = FloatingActionButton(onPressed: () {
+          appState.changeIndex(3);
+        }, child: icon);
       case 1:
         page = FullScreen(tag: tag);
         icon = Icon(Icons.arrow_back);
@@ -145,7 +183,12 @@ class _MyHomePageState extends State<MyHomePage> {
         page = EditScreen(tag: tag);
         icon = Icon(Icons.check);
         appbar = AppBar(leading: IconButton(onPressed: () {
-            showDialog(context: context, builder: (BuildContext context) {return alertEditExit;});
+            if (appState.temptag != tag || appState.temptitle != appState.indicators[tag][0] || appState.tempsubtitle != appState.indicators[tag][1]) {
+              showDialog(context: context, builder: (BuildContext context) {return alertEditExit;});
+            }
+            else {
+              appState.changeIndex(0);
+            }
           }, icon: Icon(Icons.arrow_back)),
           title: Text("Edit Indicator", style: titlestyle)
         );
@@ -156,7 +199,34 @@ class _MyHomePageState extends State<MyHomePage> {
           else {
             appState.changeIndicator();
             appState.changeIndex(0);
-            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            ScaffoldMessenger.of(context).showSnackBar(snackBarSaved);
+          }
+        },
+        child: icon);
+      case 3:
+        page = NewTag();
+        icon = Icon(Icons.check);
+        appbar = AppBar(leading: IconButton(onPressed: () {
+          if (appState.temptag != "" || appState.temptitle != "" || appState.tempsubtitle != "") {
+            showDialog(context: context, builder: (BuildContext context) {return alertNewExit;});
+          }
+          else {
+            appState.changeIndex(0);
+          }
+        }, icon: Icon(Icons.arrow_back)),
+        title: Text("New Indicator", style: titlestyle)
+        );
+        actionButton = FloatingActionButton(onPressed: () {
+          if (appState.temptag == "") {
+            showDialog(context: context, builder: (BuildContext context) {return alertNewNonZeroTag;});
+          }
+          else if (appState.checkExist(appState.temptag)) {
+            showDialog(context: context, builder: (BuildContext context) {return alertNewExistingTag;});
+          }
+          else {
+            appState.addIndicator(appState.temptag, appState.temptitle, appState.tempsubtitle);
+            appState.changeIndex(0);
+            ScaffoldMessenger.of(context).showSnackBar(snackBarCreated);
           }
         },
         child: icon);
@@ -244,6 +314,9 @@ class EditScreen extends StatelessWidget {
     var tonaltag = tag;
     var title = appState.indicators[tag][0];
     var subtitle = appState.indicators[tag][1];
+    appState.temptag = tonaltag;
+    appState.temptitle = title;
+    appState.tempsubtitle = subtitle;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -287,7 +360,7 @@ class EditScreen extends StatelessWidget {
           },
         )
       ],
-    ); //TODO: Implement EditScreen and NewTagScreen
+    ); 
   }
 }
 
@@ -323,6 +396,66 @@ class FullScreen extends StatelessWidget {
           ),
         ),
       )
+    );
+  }
+}
+
+class NewTag extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    appState.temptag = "";
+    appState.temptitle = "";
+    appState.tempsubtitle = "";
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Tone Indicator *",
+            hintText: "e.g. /s"
+          ),
+          onChanged: (value) {
+            appState.temptag = value;
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "This field is mandatory.";
+            }
+            return null;
+          },
+        ),
+        SizedBox(
+          height: 15.0,
+        ),
+        TextFormField(
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Title",
+            hintText: "e.g. Sarcasm"
+          ),
+          onChanged: (value) {
+            appState.temptitle = value;
+          },
+        ),
+        SizedBox(
+          height: 15.0,
+        ),
+        TextFormField(
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Description",
+            hintText: "When is your tag to be used?"
+          ),
+          onChanged: (value) {
+            appState.tempsubtitle = value;
+          },
+        )
+      ],
     );
   }
 }
