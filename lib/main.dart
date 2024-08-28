@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -40,9 +39,18 @@ class MyAppState extends ChangeNotifier {
   Map indicators = testData; //replace testData with {} for test
   var selectedIndex = 0;
   var currentTag = "";
+  var temptag = "";
+  var temptitle = "";
+  var tempsubtitle = "";
 
   void addIndicator(tag, name, desc) {
     indicators[tag] = [name, desc];
+    notifyListeners();
+  }
+
+  void changeIndicator() {
+    indicators.remove(currentTag);
+    indicators[temptag] = [temptitle, tempsubtitle];
     notifyListeners();
   }
 
@@ -77,10 +85,13 @@ class _MyHomePageState extends State<MyHomePage> {
     final theme = Theme.of(context);
     final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
 
-    Widget cancel = TextButton(onPressed: (){}, child: Text("Cancel"));
+    Widget cancel = TextButton(onPressed: (){Navigator.of(context).pop();}, child: Text("Cancel"));
     Widget closeEdit = TextButton(onPressed: (){
       appState.changeIndex(0);
+      Navigator.of(context).pop();
     }, child: Text("Close"));
+
+
     AlertDialog alertEditExit = AlertDialog(
       title: Text("Exit Editing"),
       content: Text("Are you sure you want to exit the edit screen? Unsaved data will be lost."),
@@ -89,10 +100,29 @@ class _MyHomePageState extends State<MyHomePage> {
         closeEdit
       ],
     );
+
+    Widget deleteEdit = TextButton(onPressed: (){
+      appState.removeIndicator(tag);
+      appState.changeIndex(0);
+      Navigator.of(context).pop();
+    }, child: Text("Delete"));
+
+
+    AlertDialog alertDeleteTag = AlertDialog(
+      title: Text("Delete Tag"),
+      content: Text("You've left the 'Tone Indicator' box empty. If you continue, the tone indicator will be deleted. Are you sure?"),
+      actions: [
+        cancel,
+        deleteEdit
+      ],
+    );
+
+    SnackBar snackBar = SnackBar(content: Text("Changes saved."));
     
     Widget page;
     PreferredSizeWidget appbar;
     Icon icon;
+    FloatingActionButton actionButton;
     switch (index) {
       case 0:
         page = GeneratorPage();
@@ -102,10 +132,15 @@ class _MyHomePageState extends State<MyHomePage> {
           }, icon: Icon(Icons.close)),
           title: Text("Tone Indicators", style: titlestyle),
         );
+        actionButton = FloatingActionButton(onPressed: () {}, child: icon);
       case 1:
         page = FullScreen(tag: tag);
         icon = Icon(Icons.arrow_back);
         appbar = PreferredSize(preferredSize: Size(0.0, 0.0), child: Container());
+        actionButton = FloatingActionButton(onPressed: () {
+          appState.changeIndex(0);
+        },
+        child: icon);
       case 2:
         page = EditScreen(tag: tag);
         icon = Icon(Icons.check);
@@ -114,7 +149,17 @@ class _MyHomePageState extends State<MyHomePage> {
           }, icon: Icon(Icons.arrow_back)),
           title: Text("Edit Indicator", style: titlestyle)
         );
-
+        actionButton = FloatingActionButton(onPressed: () {
+          if (appState.temptag == "") {
+            showDialog(context: context, builder: (BuildContext context){return alertDeleteTag;});
+          }
+          else {
+            appState.changeIndicator();
+            appState.changeIndex(0);
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
+        },
+        child: icon);
       default:
         throw UnimplementedError('no widget for $index');
     }
@@ -123,14 +168,8 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, constraints) {
         return Scaffold(
           body: page,
-          appBar:  appbar,
-          floatingActionButton: FloatingActionButton(onPressed: () {
-            if (index == 1) {
-              appState.changeIndex(0); //TODO: Fully implement Button
-            }
-          },
-          child: icon,
-          ),
+          appBar: appbar,
+          floatingActionButton: actionButton
         );
       }
     );
@@ -202,21 +241,24 @@ class EditScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var tonaltag = tag;
     var title = appState.indicators[tag][0];
     var subtitle = appState.indicators[tag][1];
 
-
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextFormField(
-          initialValue: tag,
+          initialValue: tonaltag,
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             labelText: "Tone Indicator"
           ),
+          onChanged: (value) {
+            appState.temptag = value;
+          },
         ),
         SizedBox(
           height: 15.0,
@@ -227,6 +269,9 @@ class EditScreen extends StatelessWidget {
             border: OutlineInputBorder(),
             labelText: "Title"
           ),
+          onChanged: (value) {
+            appState.temptitle = value;
+          },
         ),
         SizedBox(
           height: 15.0,
@@ -237,6 +282,9 @@ class EditScreen extends StatelessWidget {
             border: OutlineInputBorder(),
             labelText: "Description"
           ),
+          onChanged: (value) {
+            appState.tempsubtitle = value;
+          },
         )
       ],
     ); //TODO: Implement EditScreen and NewTagScreen
