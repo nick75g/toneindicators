@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'dart:async';
+import 'package:path_provider/path_provider.dart';
 
 var testData = {
   "/s": ["sarcasm", "The previous statement was meant to be sarcastic."],
@@ -13,8 +13,42 @@ var testData = {
   "/srs": ["serious", "The previous statement was to be taken seriously."]
 }; //TODO: Forget sqflite, replace with path_provider
 
-void main() {
+var finalData = {};
+File saveFile = File('');
+
+
+Future<String> get _localPath async {
+  final directory = await getApplicationDocumentsDirectory();
+
+  return directory.path;
+}
+
+Future<File> get _localFile async {
+  final path = await _localPath;
+
+  return File('$path/tags.json');
+}
+
+Future<File> saveChanges(Map map) async {
+  final file = await _localFile;
+
+  return file.writeAsString(jsonEncode(map));
+}
+
+Future<Map> readFile() async {
+  try {
+    final file = await _localFile;
+    final contents = await file.readAsString();
+    return jsonDecode(contents);
+  } catch (e) {
+    return testData;
+  }
+}
+
+void main() async {
   runApp(MyApp());
+  finalData = await readFile();
+  saveFile = await _localFile;
 }
 
 class MyApp extends StatelessWidget {
@@ -37,26 +71,30 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  Map indicators = testData; //replace testData with {} for test
+  Map indicators = finalData; //TODO: replace testData with {} for test
   var selectedIndex = 0;
   String currentTag = "";
   String temptag = "";
   String temptitle = "";
   String tempsubtitle = "";
+  File localFile = saveFile;
 
-  void addIndicator(String tag, String name, String desc) {
+  void addIndicator(String tag, String name, String desc) async {
     indicators[tag] = <String>[name, desc];
+    await saveChanges(indicators);
     notifyListeners();
   }
 
-  void changeIndicator() {
+  void changeIndicator() async {
     indicators.remove(currentTag);
     indicators[temptag] = [temptitle, tempsubtitle];
+    await saveChanges(indicators);
     notifyListeners();
   }
 
-  void removeIndicator(tag) {
+  void removeIndicator(tag) async {
     indicators.remove(tag);
+    await saveChanges(indicators);
     notifyListeners();
   }
 
@@ -83,12 +121,29 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   @override
+  void initState() {
+    super.initState();
+    readFile().then((value) {
+      setState(() {
+        finalData = value;
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var tag = appState.currentTag;
     var index = appState.selectedIndex;
     final theme = Theme.of(context);
     final titlestyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
+
+    if (finalData != {}) {
+      appState.indicators = finalData;
+    }
+    else {
+      appState.indicators = testData;
+    }
 
     Widget cancel = TextButton(onPressed: (){
       Navigator.of(context).pop();
