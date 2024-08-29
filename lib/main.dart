@@ -399,49 +399,84 @@ class EditScreen extends StatelessWidget {
     appState.temptitle = title;
     appState.tempsubtitle = subtitle;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(height: 15.0),
-        TextFormField(
-          initialValue: tonaltag,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Tone Indicator"
+
+
+    Widget cancel = TextButton(onPressed: (){
+      Navigator.of(context).pop();
+    }, child: Text("Cancel"));
+
+    Widget exitScreen = TextButton(onPressed: (){
+      appState.changeIndex(0);
+      Navigator.of(context).pop();
+    }, child: Text("Exit"));
+
+
+
+    AlertDialog alertEditExit = AlertDialog(
+      title: Text("Exit Editing"),
+      content: Text("Are you sure you want to exit the 'Edit Indicator' screen? Unsaved data will be lost."),
+      actions: [
+        cancel,
+        exitScreen
+      ]
+    );
+
+
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (appState.temptag != tag || appState.temptitle != appState.indicators[tag][0] || appState.tempsubtitle != appState.indicators[tag][1]) {
+          showDialog(context: context, builder: (BuildContext context) {return alertEditExit;});
+        }
+        else {
+          appState.changeIndex(0);
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 15.0),
+          TextFormField(
+            initialValue: tonaltag,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Tone Indicator"
+            ),
+            onChanged: (value) {
+              appState.temptag = value;
+            },
           ),
-          onChanged: (value) {
-            appState.temptag = value;
-          },
-        ),
-        SizedBox(
-          height: 15.0,
-        ),
-        TextFormField(
-          initialValue: title,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Title"
+          SizedBox(
+            height: 15.0,
           ),
-          onChanged: (value) {
-            appState.temptitle = value;
-          },
-        ),
-        SizedBox(
-          height: 15.0,
-        ),
-        TextFormField(
-          initialValue: subtitle,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Description"
+          TextFormField(
+            initialValue: title,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Title"
+            ),
+            onChanged: (value) {
+              appState.temptitle = value;
+            },
           ),
-          onChanged: (value) {
-            appState.tempsubtitle = value;
-          },
-        )
-      ],
+          SizedBox(
+            height: 15.0,
+          ),
+          TextFormField(
+            initialValue: subtitle,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Description"
+            ),
+            onChanged: (value) {
+              appState.tempsubtitle = value;
+            },
+          )
+        ],
+      ),
     ); 
   }
 }
@@ -453,31 +488,38 @@ class FullScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final cardColor = theme.colorScheme.primary;
     final style = theme.textTheme.displayLarge!.copyWith(color: theme.colorScheme.onPrimary);
 
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(5.0),
-        width: MediaQuery.sizeOf(context).width,
-        height: MediaQuery.sizeOf(context).height,
-        child: Card(
-          color: cardColor,
-          child: FittedBox(
-            fit: BoxFit.contain,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Text(tag,
-                  style: style,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        appState.changeIndex(0);
+      },
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(5.0),
+          width: MediaQuery.sizeOf(context).width,
+          height: MediaQuery.sizeOf(context).height,
+          child: Card(
+            color: cardColor,
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Text(tag,
+                    style: style,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      )
+        )
+      ),
     );
   }
 }
@@ -489,56 +531,91 @@ class NewTag extends StatelessWidget {
     appState.temptag = "";
     appState.temptitle = "";
     appState.tempsubtitle = "";
+    
+    
+    
+    Widget cancel = TextButton(onPressed: (){
+      Navigator.of(context).pop();
+    }, child: Text("Cancel"));
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(height: 15.0),
-        TextFormField(
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Tone Indicator *",
-            hintText: "e.g. /s"
+    Widget exitScreen = TextButton(onPressed: (){
+      appState.changeIndex(0);
+      Navigator.of(context).pop();
+    }, child: Text("Exit"));
+
+    
+
+    AlertDialog alertNewExit = AlertDialog(
+      title: Text("Exit Creation"),
+      content: Text("Are you sure you want to exit the 'New Indicator' screen? Unsaved Data will be lost."),
+      actions: [
+        cancel,
+        exitScreen
+      ]
+    );
+
+
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (appState.temptag != "" || appState.temptitle != "" || appState.tempsubtitle != "") {
+          showDialog(context: context, builder: (BuildContext context) {return alertNewExit;});
+        }
+        else {
+          appState.changeIndex(0);
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 15.0),
+          TextFormField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Tone Indicator *",
+              hintText: "e.g. /s"
+            ),
+            onChanged: (value) {
+              appState.temptag = value;
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "This field is mandatory.";
+              }
+              return null;
+            },
           ),
-          onChanged: (value) {
-            appState.temptag = value;
-          },
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return "This field is mandatory.";
-            }
-            return null;
-          },
-        ),
-        SizedBox(
-          height: 15.0,
-        ),
-        TextFormField(
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Title",
-            hintText: "e.g. Sarcasm"
+          SizedBox(
+            height: 15.0,
           ),
-          onChanged: (value) {
-            appState.temptitle = value;
-          },
-        ),
-        SizedBox(
-          height: 15.0,
-        ),
-        TextFormField(
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: "Description",
-            hintText: "When is your tag to be used?"
+          TextFormField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Title",
+              hintText: "e.g. Sarcasm"
+            ),
+            onChanged: (value) {
+              appState.temptitle = value;
+            },
           ),
-          onChanged: (value) {
-            appState.tempsubtitle = value;
-          },
-        )
-      ],
+          SizedBox(
+            height: 15.0,
+          ),
+          TextFormField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Description",
+              hintText: "When is your tag to be used?"
+            ),
+            onChanged: (value) {
+              appState.tempsubtitle = value;
+            },
+          )
+        ],
+      ),
     );
   }
 }
