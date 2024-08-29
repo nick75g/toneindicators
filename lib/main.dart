@@ -11,7 +11,7 @@ var testData = {
   "/lh": ["lighthearted", "The previous statement was meant to be lighthearted."],
   "/gen": ["genuine", "The previous statement was genuine."],
   "/srs": ["serious", "The previous statement was to be taken seriously."]
-}; //TODO: Forget sqflite, replace with path_provider
+};
 
 var finalData = {};
 File saveFile = File('');
@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  Map indicators = finalData; //TODO: replace testData with {} for test
+  Map indicators = finalData;
   var selectedIndex = 0;
   String currentTag = "";
   String temptag = "";
