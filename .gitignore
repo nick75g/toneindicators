@@ -9,6 +9,9 @@
 .history
 .svn/
 migrate_working_dir/
+.obsidian/
+.vscode/
+.metadata
 
 # IntelliJ related
 *.iml
